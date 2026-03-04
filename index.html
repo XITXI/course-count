@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f47696">
+  <title>可可教学记录</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-noise"></div>
+  <div class="page-accent page-accent-a"></div>
+  <div class="page-accent page-accent-b"></div>
+
+  <main class="app-shell">
+    <header class="top-card">
+      <div class="title-wrap">
+        <h1>可可教学记录</h1>
+        <p id="lastUpdated">上次更新：--</p>
+      </div>
+      <div class="head-actions">
+        <button id="btnAddStudent" class="pill pill-green" type="button">添加学生</button>
+        <button id="btnOpenExport" class="pill pill-pink" type="button">导出</button>
+        <button id="btnOpenImport" class="pill pill-pink" type="button">导入</button>
+      </div>
+    </header>
+
+    <section class="income-card">
+      <div class="income-head">
+        <h2>本周教学收入</h2>
+        <div class="range-chip" id="rangeChip" title="选择统计范围（保存时会记录此范围）">
+          <input id="rangeStart" type="date" aria-label="开始日期">
+          <span>-</span>
+          <input id="rangeEnd" type="date" aria-label="结束日期">
+        </div>
+      </div>
+      <div class="income-main">
+        <p id="weekIncome">0.00元</p>
+        <div class="income-actions">
+          <button id="btnSaveWeekIncome" type="button" class="ghost-btn">保存本周收入</button>
+          <button id="btnFocusHistory" type="button" class="ghost-btn">历史收入</button>
+        </div>
+      </div>
+      <p class="income-hint">提示：课时在“学生列表”里累加，本周收入会自动跟随变化；保存后可在历史里编辑/删除。</p>
+    </section>
+
+    <section class="toolbar-card">
+      <label class="field">
+        <span>检索学生（支持首字母，如 zyr；回车可给首位学生 +1 课时）</span>
+        <input id="searchInput" type="text" placeholder="输入姓名或首字母…">
+      </label>
+      <label class="field short">
+        <span>快捷步长</span>
+        <input id="stepInput" type="number" value="1" min="0.25" step="0.25" inputmode="decimal">
+      </label>
+      <button id="btnResetWeek" type="button" class="chip-btn">重置本周课时</button>
+    </section>
+
+    <section class="students-panel">
+      <div class="section-head">
+        <h2>学生列表（<span id="studentCount">0</span>）</h2>
+        <p id="studentSummary">共 0 人</p>
+      </div>
+      <div id="studentList" class="student-grid"></div>
+    </section>
+
+    <section class="history-panel" id="historyPanel">
+      <div class="section-head">
+        <h2>历史收入（<span id="historyCount">0</span>）</h2>
+        <p id="historyTotal">累计 0.00元</p>
+      </div>
+      <div id="historyList" class="history-list"></div>
+    </section>
+  </main>
+
+  <section id="studentModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="studentModalTitle">添加学生</h3>
+        <button class="close-btn" data-close="studentModal" type="button" aria-label="关闭">×</button>
+      </div>
+      <form id="studentForm" class="modal-form">
+        <label class="field">
+          <span>学生姓名</span>
+          <input id="formStudentName" type="text" maxlength="30" required>
+        </label>
+        <label class="field">
+          <span>课时单价（元）</span>
+          <input id="formStudentPrice" type="number" min="0" step="0.5" inputmode="decimal" required>
+        </label>
+        <label class="field">
+          <span>颜色标记（black / pink / #f26f8d）</span>
+          <input id="formStudentColor" type="text" maxlength="20" placeholder="black">
+        </label>
+        <label class="field">
+          <span>当前课时</span>
+          <input id="formStudentHours" type="number" min="0" step="0.25" inputmode="decimal" value="0">
+        </label>
+        <div class="modal-actions">
+          <button id="btnDeleteStudent" class="btn btn-danger" type="button">删除学生</button>
+          <button class="btn btn-main" type="submit">保存</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section id="historyModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="historyModalTitle">编辑历史收入</h3>
+        <button class="close-btn" data-close="historyModal" type="button" aria-label="关闭">×</button>
+      </div>
+      <form id="historyForm" class="modal-form">
+        <label class="field">
+          <span>开始日期</span>
+          <input id="formHistoryStart" type="date" required>
+        </label>
+        <label class="field">
+          <span>结束日期</span>
+          <input id="formHistoryEnd" type="date" required>
+        </label>
+        <label class="field">
+          <span>收入金额（元）</span>
+          <input id="formHistoryAmount" type="number" min="0" step="0.01" inputmode="decimal" required>
+        </label>
+        <label class="field">
+          <span>备注（可选）</span>
+          <input id="formHistoryNote" type="text" maxlength="60" placeholder="例如：补课、试听、转账时间等">
+        </label>
+        <div class="modal-actions">
+          <button id="btnDeleteHistory" class="btn btn-danger" type="button">删除记录</button>
+          <button class="btn btn-main" type="submit">保存</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section id="dataModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-card wide">
+      <div class="modal-head">
+        <h3 id="dataModalTitle">学生数据导入导出</h3>
+        <button class="close-btn" data-close="dataModal" type="button" aria-label="关闭">×</button>
+      </div>
+      <p class="hint">学生导入导出格式：{"students":[{"name":"好好","price":33,"hours":0,"color":"black"}],"exportTime":时间戳}</p>
+      <textarea id="dataTextarea" rows="10" placeholder="粘贴 JSON 后点击导入覆盖；或点击生成导出数据"></textarea>
+      <div class="data-actions">
+        <button id="btnImportData" class="btn btn-main" type="button">导入覆盖</button>
+        <button id="btnGenerateData" class="btn btn-soft" type="button">生成导出</button>
+        <button id="btnCopyData" class="btn btn-soft" type="button">复制 JSON</button>
+        <button id="btnDownloadData" class="btn btn-soft" type="button">下载 JSON</button>
+      </div>
+      <p class="hint hint-2">说明：此窗口只导入/导出“学生数据”。周收入历史会自动保存在本地（浏览器 localStorage），不在这里覆盖。</p>
+    </div>
+  </section>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
